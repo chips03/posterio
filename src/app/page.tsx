@@ -27,10 +27,23 @@ export default function Home() {
     setIsLoading(true)
     setGeneratedText('')
 
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+
     try {
       // Simulated API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      setGeneratedText("This is a sample generated text based on the uploaded image. Replace this with actual API response.")
+      // await new Promise(resolve => setTimeout(resolve, 2000))
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      setGeneratedText(data.description);
     } catch (error) {
       console.error('Error generating text:', error)
       setGeneratedText('An error occurred while generating text.')
