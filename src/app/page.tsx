@@ -4,6 +4,7 @@ import Head from 'next/head'
 import Image from 'next/image'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import { ImageIcon, SparklesIcon, ClipboardCopyIcon } from 'lucide-react'
+import DOMPurify from "dompurify";
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -12,7 +13,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [generatedText, setGeneratedText] = useState<string>('')
   const [description, setDescription] = useState<string>('')
-  const fileInputRef = useRef(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -71,6 +72,13 @@ export default function Home() {
     return 'h-[30rem]';
   };
 
+  const HtmlRenderer = ( { htmlString }: { htmlString: string } ) => {
+    const sanitizedHtml = DOMPurify.sanitize(htmlString);
+    return (
+      <div dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />
+    );
+  };
+
   return (
     <div className="container min-vh-100 d-flex flex-column justify-content-center">
       <Head>
@@ -95,7 +103,7 @@ export default function Home() {
                   id="fileInput"
                 />
                 <div 
-                  onClick={() => fileInputRef.current.click()}
+                  onClick={() =>{ if (fileInputRef.current) fileInputRef.current.click() }}
                   className = {`border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-500 transition relative overflow-hidden ${getImageContainerClasses()}`}
                 >
                   {previewUrl ? (
@@ -130,20 +138,11 @@ export default function Home() {
             </div>
           </div>
 
-          {description && (
-            <div className="card mt-4 shadow-sm">
-              <div className="card-body">
-                <h2 className="card-title h5">Description</h2>
-                <p className="card-text">{description}</p>
-              </div>
-            </div>
-          )}
-
           {generatedText && (
             <div className="card mt-4 shadow-sm">
               <div className="card-body">
                 <h2 className="card-title h5">Caption</h2>
-                <p className="card-text">{generatedText}</p>
+                <p className="card-text"><HtmlRenderer htmlString={generatedText} /></p>
               </div>
             </div>
           )}

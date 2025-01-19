@@ -1,11 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-export const config = {
-    api: {
-      bodyParser: false,
-    },
-};
+export const runtime = "nodejs";
 
 const genAI = new GoogleGenerativeAI("YOUR-GEMINI-API-KEY")
 
@@ -37,17 +33,19 @@ export async function POST(req: NextRequest) {
               }]
         });
 
+        console.log(descriptionResult.response.text())
+
         // Generate social media caption
         // const captionPrompt = `Create a catchy and engaging social media caption based on this image description: ${descriptionResult.response.text()}. 
         // Make it suitable for platforms like Instagram or Twitter, using appropriate hashtags.`;
 
-        const captionPrompt = `Buat teks media sosial yang menarik dan memikat berdasarkan deskripsi gambar ini: ${descriptionResult.response.text()}. Gunakan tagar yang sesuai untuk platform seperti Instagram atau Twitter.`;
+        const captionPrompt = `Buat 3 opsi teks media sosial menggunakan bahasa gaul yang menarik dan memikat berdasarkan deskripsi gambar ini: ${descriptionResult.response.text()}. Gunakan tagar yang sesuai untuk platform seperti Instagram atau Twitter. Response harus dibungkus menggunakan HTML tags yang sesuai untuk digunakan langsung dalam webpage tapi jangan memakai tag <head> atau <body>.`;
 
         const captionResult = await model.generateContent(captionPrompt);
 
         return NextResponse.json({
             description: descriptionResult.response.text(),
-            caption: captionResult.response.text()
+            caption: captionResult.response.text().replace("```html", "").replace("```", "")
         });
     } catch(error) {
         console.error('Error processing image:', error);
