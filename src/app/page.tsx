@@ -11,12 +11,15 @@ export default function Home() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [generatedText, setGeneratedText] = useState<string>('')
+  const [description, setDescription] = useState<string>('')
   const fileInputRef = useRef(null);
+  const [mimeType, setMimeType] = useState<string | null>(null);
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const file = event.target.files[0]
       setSelectedFile(file)
+      setMimeType(file.type)
       setPreviewUrl(URL.createObjectURL(file))
     }
   }
@@ -26,7 +29,8 @@ export default function Home() {
 
     setIsLoading(true)
     setGeneratedText('')
-
+      
+    console.log("mimetype = " + mimeType);
     const formData = new FormData();
     formData.append('image', selectedFile);
 
@@ -43,7 +47,8 @@ export default function Home() {
       }
 
       const data = await response.json();
-      setGeneratedText(data.description);
+      setDescription(data.description);
+      setGeneratedText(data.caption);
     } catch (error) {
       console.error('Error generating text:', error)
       setGeneratedText('An error occurred while generating text.')
@@ -125,14 +130,24 @@ export default function Home() {
             </div>
           </div>
 
+          {description && (
+            <div className="card mt-4 shadow-sm">
+              <div className="card-body">
+                <h2 className="card-title h5">Description</h2>
+                <p className="card-text">{description}</p>
+              </div>
+            </div>
+          )}
+
           {generatedText && (
             <div className="card mt-4 shadow-sm">
               <div className="card-body">
-                <h2 className="card-title h5">Generated Text</h2>
+                <h2 className="card-title h5">Caption</h2>
                 <p className="card-text">{generatedText}</p>
               </div>
             </div>
           )}
+
         </div>
       </main>
     </div>

@@ -1,7 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
-import formidable from 'formidable';
-import fs from 'fs-extra';
-import path from 'path';
+import { NextResponse, NextRequest } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const config = {
@@ -10,66 +7,54 @@ export const config = {
     },
 };
 
-const genAI = new GoogleGenerativeAI("AIzaSyBd19nX9AsBMCUOS4aKjIrR0B4Ef7V2ZEA")
+const genAI = new GoogleGenerativeAI("YOUR-GEMINI-API-KEY")
 
-export default async function handler(
-    req: NextApiRequest, 
-    res: NextApiResponse
-) {
-    console.info("Generating caption ...");
-    if (req.method === 'POST') {
-        // Parse the incoming form data
-        const form = new formidable.IncomingForm();
+export async function POST(req: NextRequest) {
+    console.log("Generating caption ... ");
     
-        form.parse(req, async (err, fields, files) => {
-            if (err) {
-                return res.status(500).json({ error: 'File upload failed' });
-            }
+    const formData = await req.formData()
+    const file = formData.get('image') as Blob
 
-            const file = files.image as formidable.File;
-
-            // Read the file
-            const fileBuffer = await fs.readFile(file.filepath);
-
-            try {
-                // Generate image description
-                const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-                const describePrompt = "Describe this image in detail, capturing its key elements, colors, and mood.";
-                
-                const descriptionResult = await model.generateContent({
-                    contents: [{ 
-                        role: 'user', 
-                        parts: [
-                          { text: describePrompt },
-                          { inlineData: { 
-                            mimeType: file.mimetype || 'image/jpeg', 
-                            data: fileBuffer.toString('base64') 
-                          }}
-                        ]
-                      }]
-                });
-
-                // Generate social media caption
-                const captionPrompt = `Create a catchy and engaging social media caption based on this image description: ${descriptionResult.response.text()}. 
-                Make it suitable for platforms like Instagram or Twitter, using appropriate hashtags.`;
-                
-                const captionResult = await model.generateContent(captionPrompt);
-
-                return res.status(200).json({
-                    description: descriptionResult.response.text(),
-                    caption: captionResult.response.text()
-                });
-            } catch(error) {
-                console.error('Error processing image:', error);
-                res.status(500).json({ 
-                error: 'Failed to process image', 
-                details: error instanceof Error ? error.message : 'Unknown error' 
-                });
-            }
-
+    // Read the file
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    
+    try {
+        // Generate image description
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        // const describePrompt = "Describe this image in detail, capturing its key elements, colors, and mood.";
+        const describePrompt = "Jelaskan gambar ini secara detail, ambil elemen utama, warna, dan mood.";
+        
+        const descriptionResult = await model.generateContent({
+            contents: [{ 
+                role: 'user', 
+                parts: [
+                  { text: describePrompt },
+                  { inlineData: { 
+                    mimeType: 'image/jpeg', 
+                    data: fileBuffer.toString('base64') 
+                  }}
+                ]
+              }]
         });
-    } else {
-        res.setHeader('Allow', ['POST']);
-        res.status(405).end(`Method ${req.method} Not Allowed`);
+
+        // Generate social media caption
+        // const captionPrompt = `Create a catchy and engaging social media caption based on this image description: ${descriptionResult.response.text()}. 
+        // Make it suitable for platforms like Instagram or Twitter, using appropriate hashtags.`;
+
+        const captionPrompt = `Buat teks media sosial yang menarik dan memikat berdasarkan deskripsi gambar ini: ${descriptionResult.response.text()}. Gunakan tagar yang sesuai untuk platform seperti Instagram atau Twitter.`;
+
+        const captionResult = await model.generateContent(captionPrompt);
+
+        return NextResponse.json({
+            description: descriptionResult.response.text(),
+            caption: captionResult.response.text()
+        });
+    } catch(error) {
+        console.error('Error processing image:', error);
+        NextResponse.json({ 
+            error: 'Failed to process image', 
+            details: error instanceof Error ? error.message : 'Unknown error',
+            status: 500
+        });
     }
 }
