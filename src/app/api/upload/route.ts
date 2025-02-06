@@ -3,7 +3,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export const runtime = "nodejs";
 
-const genAI = new GoogleGenerativeAI("YOUR-GEMINI-API-KEY")
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not defined in environment variables");
+}
+
+const genAI = new GoogleGenerativeAI(apiKey)
 
 export async function POST(req: NextRequest) {
     console.log("Generating caption ... ");
