@@ -89,7 +89,8 @@ export default function Home() {
 
       <main className="row justify-content-center">
         <div className="col-12 col-md-8 col-lg-6">
-          <h1 className="text-center mb-4">Image to Caption</h1>
+          <h1 className="text-center mb-1">AI Caption Generator</h1>
+          <h5 className="text-center mb-4">( Max. file size is 5 MB )</h5>
 
           <div className="card shadow-sm">
             <div className="card-body">

@@ -8,13 +8,20 @@ if (!apiKey) {
     throw new Error("GEMINI_API_KEY is not defined in environment variables");
 }
 
+const maxFileSize = 5 * 1024 * 1024;
+
 const genAI = new GoogleGenerativeAI(apiKey)
 
 export async function POST(req: NextRequest) {
     console.log("Generating caption ... ");
+
     
     const formData = await req.formData()
     const file = formData.get('image') as Blob
+
+    if (file.size > maxFileSize) {
+        return new Response(JSON.stringify({ error: 'File is too big, max size is 5MB' }), { status: 400 });
+    }
 
     // Read the file
     const fileBuffer = Buffer.from(await file.arrayBuffer());
@@ -52,7 +59,7 @@ export async function POST(req: NextRequest) {
         });
     } catch(error) {
         console.error('Error processing image:', error);
-        NextResponse.json({ 
+        return NextResponse.json({ 
             error: 'Failed to process image', 
             details: error instanceof Error ? error.message : 'Unknown error',
             status: 500
