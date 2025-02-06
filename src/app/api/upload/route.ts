@@ -38,8 +38,6 @@ export async function POST(req: NextRequest) {
               }]
         });
 
-        console.log(descriptionResult.response.text())
-
         // Generate social media caption
         // const captionPrompt = `Create a catchy and engaging social media caption based on this image description: ${descriptionResult.response.text()}. 
         // Make it suitable for platforms like Instagram or Twitter, using appropriate hashtags.`;
